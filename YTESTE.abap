@@ -3,6 +3,25 @@ report yteste.
 tables:
   sscrfields, t001, t009b. "Fields on selection screens
 
+
+class local_one definition final .
+
+  public section .
+
+    class-methods initialization .
+
+  protected section .
+  private section .
+
+endclass .
+
+class local_one implementation .
+
+  method initialization .
+  endmethod .
+
+endclass .
+
 data:
   gd_scftx type smp_dyntxt.   "function key 1 properties
 
@@ -33,6 +52,7 @@ selection-screen function key 1.
 
 
 at selection-screen output .
+
   loop at screen.
     if screen-group1 = 'M2'.
       screen-input = '0'.
