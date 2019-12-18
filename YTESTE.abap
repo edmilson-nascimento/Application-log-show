@@ -1,26 +1,26 @@
-REPORT YTESTE.
+report yteste.
 
-TABLES:
+tables:
   sscrfields, t001, t009b. "Fields on selection screens
 
-DATA:
-  gd_scftx TYPE smp_dyntxt.   "function key 1 properties
+data:
+  gd_scftx type smp_dyntxt.   "function key 1 properties
 
 
 
-SELECTION-SCREEN BEGIN OF BLOCK box2 WITH FRAME TITLE txtblk02.
+selection-screen begin of block box2 with frame title txtblk02.
 
-PARAMETERS:
-  objtect type balhdr-object DEFAULT 'USD'.
+parameters:
+  objtect type balhdr-object default 'USD'.
 
-SELECTION-SCREEN END OF BLOCK box2.
+selection-screen end of block box2.
 
 
 selection-screen begin of screen 9000 as window title txtblk03.
 parameters:
-  object   type balhdr-object modif id m1  default 'Z*' ,
+  object   type balhdr-object modif id m1  default 'Z*',
   subobjec type balhdr-subobject default '*',
-  aldate_f type balhdr-aldate default '20190101' ,
+  aldate_f type balhdr-aldate default '20190101',
   aldate_t type balhdr-aldate default sy-datum,
   altime_f type balhdr-altime modif id m1 default '000000',
   altime_t type balhdr-altime modif id m1 default '235959'.
@@ -28,18 +28,18 @@ parameters:
 selection-screen end of screen 9000.
 
 
-SELECTION-SCREEN FUNCTION KEY 1.
+selection-screen function key 1.
 
 
 
 at selection-screen output .
-loop at screen.
-  if screen-group1 = 'M2'.
-    screen-input = '0'.
+  loop at screen.
+    if screen-group1 = 'M2'.
+      screen-input = '0'.
 *    screen-active = '0'.
-  endif.
-  modify screen.
-endloop.
+    endif.
+    modify screen.
+  endloop.
 
 at selection-screen.
 
@@ -96,9 +96,9 @@ at selection-screen.
 **********************************************************************
 **     find out which logs are to be loaded
 **********************************************************************
-      data l_t_log_handle        TYPE bal_t_logh .
-      data l_t_log_loaded        TYPE bal_t_logh .
-      data l_t_locked        TYPE  BALHDR_T .
+      data l_t_log_handle        type bal_t_logh .
+      data l_t_log_loaded        type bal_t_logh .
+      data l_t_locked        type  balhdr_t .
 
       clear l_t_log_handle.
 
@@ -185,7 +185,7 @@ at selection-screen.
 **   get standard profile profile if no display profile is defined
 **********************************************************************
 
-      data l_s_display_profile TYPE  BAL_S_PROF .
+      data l_s_display_profile type  bal_s_prof .
 
 *      if not i_s_display_profile is initial.
 *        l_s_display_profile = i_s_display_profile.
@@ -209,15 +209,15 @@ at selection-screen.
 *      l_s_display_profile-disvariant-report = i_variant_report.
 
 
-      CALL FUNCTION 'BAL_DSP_LOG_DISPLAY'
-        EXPORTING
+      call function 'BAL_DSP_LOG_DISPLAY'
+        exporting
           i_t_log_handle      = l_t_log_handle
           i_s_display_profile = l_s_display_profile
 *         i_srt_by_timstmp    = i_srt_by_timstmp
-        EXCEPTIONS
+        exceptions
           no_authority        = 1
-          OTHERS              = 2.
-      IF sy-subrc <> 0.
+          others              = 2.
+      if sy-subrc <> 0.
 
       endif .
 
@@ -226,7 +226,7 @@ at selection-screen.
   endcase .
 
 
-INITIALIZATION.
+initialization.
 *  txtblk01 = 'General Selections'.
 *  txtblk02 = 'Output Currency Selection'.
 
