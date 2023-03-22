@@ -228,75 +228,64 @@ CLASS ycl_hcm_application_log IMPLEMENTATION.
   METHOD show_saved.
 
     DATA:
-      lt_log_handle TYPE bal_t_logh,
-      lt_msg_handle TYPE bal_t_msgh.
-    DATA g_t_log_header TYPE balhdr_t .
-
-**    IF ( is_log_number IS INITIAL ) .
-**      RETURN .
-**    ENDIF .
-*
-**    data(lognumbers) = value SZAL_LOGNUMBERS(
-**      ( item = is_log_number )
-**    ).
-*    DATA(lognumber) = VALUE bal_r_logn(
-*      ( sign   = if_fsbp_const_range=>sign_include
-*        option = if_fsbp_const_range=>option_equal
-*        low    = is_log_number )
-*    ).
-
+      lt_log_handle  TYPE bal_t_logh,
+      lt_msg_handle  TYPE bal_t_msgh,
+      g_t_log_header TYPE balhdr_t.
 
     IF ( lines( log_numbers ) EQ 0 ) .
       RETURN .
     ENDIF .
 
-    DATA(log_filter) = VALUE bal_s_lfil( lognumber = log_numbers ) .
+    DATA(log_range) = VALUE bal_r_logn(
+      FOR r IN log_numbers (
+        sign   = if_fsbp_const_range=>sign_include
+        option = if_fsbp_const_range=>option_equal
+        low    = r
+      )
+    ).
 
-*    g_r_object-sign   = 'I'.
-*    g_r_object-option = 'EQ'.
-*    g_r_object-low    = const_object_flight_invoice.
-*    APPEND g_r_object TO g_s_log_filter-object.
-*    g_r_extnumber-sign   = 'I'.
-*    g_r_extnumber-option = 'EQ'.
-*    g_r_extnumber-low    = p_fldate.
-*    APPEND g_r_extnumber TO g_s_log_filter-extnumber.
+    DATA(log_filter) = VALUE bal_s_lfil(
+      lognumber = log_range
+    ).
 
-
-*   search on DB for these logs
+    " Search on DB for these logs
     CALL FUNCTION 'BAL_DB_SEARCH'
       EXPORTING
-*       i_s_log_filter = g_s_log_filter
         i_s_log_filter = log_filter
       IMPORTING
         e_t_log_header = g_t_log_header
       EXCEPTIONS
         OTHERS         = 0.
-*   load logs from DB
+    IF ( sy-subrc NE 0 ) .
+      RETURN .
+    ENDIF .
+
+    " load logs from DB
     CALL FUNCTION 'BAL_DB_LOAD'
       EXPORTING
         i_t_log_header = g_t_log_header
       EXCEPTIONS
         OTHERS         = 0.
+    IF ( sy-subrc NE 0 ) .
+      RETURN .
+    ENDIF .
 
+    DATA(display_profile) = VALUE bal_s_prof(
+      disvariant = VALUE disvariant(
+                     report     = sy-repid
+                     handle = 'LOG'
+                   )
+    ).
 
-    DATA l_s_display_profile TYPE bal_s_prof .
-
-    l_s_display_profile-disvariant-report = sy-repid.
-* when you use also other ALV lists in your report,
-* please specify a handle to distinguish between the display
-* variants of these different lists, e.g:
-    l_s_display_profile-disvariant-handle = 'LOG'.
+*    l_s_display_profile-disvariant-report = sy-repid.
+** when you use also other ALV lists in your report,
+** please specify a handle to distinguish between the display
+** variants of these different lists, e.g:
+*    l_s_display_profile-disvariant-handle = 'LOG'.
 
     CALL FUNCTION 'BAL_DSP_LOG_DISPLAY'
       EXPORTING
-        i_s_display_profile = l_s_display_profile
-      EXCEPTIONS
-        OTHERS              = 1.
-    IF sy-subrc <> 0.
-      MESSAGE ID sy-msgid TYPE 'I' NUMBER sy-msgno
-              WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-    ENDIF.
-
+        i_s_display_profile = display_profile .
 
   ENDMETHOD.
 
