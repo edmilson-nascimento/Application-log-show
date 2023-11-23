@@ -29,9 +29,13 @@ CLASS /yga/cl_oisu_log DEFINITION
       IMPORTING
         !iv_extnumber TYPE balnrext .
     "! <p class="shorttext synchronized" lang="pt">Adicionar diretamente log</p>
-    CLASS-METHODS add_direct
+    METHODS add_backlog
       IMPORTING
-        !im_step TYPE char05 .
+        !im_step  TYPE char05
+        !im_date  type sy-datum   OPTIONAL
+        !im_time  type sy-uzeit   OPTIONAL
+        !im_equnr TYPE equi-equnr OPTIONAL
+        !im_tplnr TYPE iflo-tplnr OPTIONAL .
 
 
   PROTECTED SECTION.
@@ -44,11 +48,19 @@ CLASS /yga/cl_oisu_log DEFINITION
       gv_subobject  TYPE balsubobj,
       gv_log_handle TYPE balloghndl.
 
-    "! <p class="shorttext synchronized" lang="pt">Criar diretamente mensagem de log</p>
-    CLASS-METHODS create_direct
+    "! <p class="shorttext synchronized" lang="pt">Retorna hora no formato HH:mm:ss</p>
+    CLASS-METHODS get_date_out
       IMPORTING
-        !im_message TYPE bapiret2_t .
+        !im_date      TYPE sy-datum
+      RETURNING
+        VALUE(result) TYPE bapiret2-message .
 
+    "! <p class="shorttext synchronized" lang="pt">Retorna hora no formato HH:mm:ss</p>
+    CLASS-METHODS get_time_out
+      IMPORTING
+        !im_time      TYPE sy-uzeit
+      RETURNING
+        VALUE(result) TYPE bapiret2-message .
 
 ENDCLASS.
 
@@ -166,7 +178,7 @@ CLASS /yga/cl_oisu_log IMPLEMENTATION.
 *      ls_s_log-del_before = lv_del_before.
 *    ENDIF.
 
-    ls_s_log-aldate_del = sy-datum + 30 .
+    ls_s_log-aldate_del = sy-datum + 30 .                "#EC NUMBER_OK
     ls_s_log-del_before = abap_on .
 
     CALL FUNCTION 'BAL_LOG_CREATE'
@@ -316,11 +328,11 @@ CLASS /yga/cl_oisu_log IMPLEMENTATION.
         internal_error        = 3
         OTHERS                = 4.
 
-        IF ( sy-subrc NE 0 ) and
-           ( sy-msgty IS NOT INITIAL ) .
-          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-             WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-        ENDIF.
+    IF ( sy-subrc NE 0 ) AND
+       ( sy-msgty IS NOT INITIAL ) .
+      MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+         WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+    ENDIF.
 
 
   ENDMETHOD.
@@ -352,9 +364,10 @@ CLASS /yga/cl_oisu_log IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD add_direct .
+  METHOD add_backlog .
 
     CONSTANTS:
+      lc_message_id TYPE bapiret2-id VALUE '/YGA/JUMP',
       lc_init       TYPE char02 VALUE '00',
       lc_step_01_ok TYPE char05 VALUE '01-ok', "Execução ok
       lc_step_01_w  TYPE char05 VALUE '01-w', " Waiting / Aguardando
@@ -367,39 +380,65 @@ CLASS /yga/cl_oisu_log IMPLEMENTATION.
     CASE im_step .
 
       WHEN lc_init .
-        DATA(lt_message) = VALUE bapiret2_t(
-          ( type       = if_xo_const_message=>info
-            id         = '/YGA/JUMP'
-            number     = 000
-            message_v1 = 'Fase'
-            message_v2 = im_step
-            message_v3 = |- { sy-uzeit+0(2) }:{ sy-uzeit+2(2) }:{ sy-uzeit+4(2) }| )
-        ) .
-        /yga/cl_oisu_log=>create_direct( lt_message ) .
+        me->add(
+          EXPORTING it_message = VALUE bapiret2_t(
+            ( type       = if_xo_const_message=>info
+              id         = lc_message_id
+              number     = 876                           "#EC NUMBER_OK
+              message_v1 = get_date_out( sy-datum )
+              message_v2 = get_time_out( sy-uzeit ) ) )
+         ) .
+        IF ( 0 EQ 1 ). MESSAGE i876(/yga/jump) WITH space space. ENDIF .
 
-      WHEN lc_step_01_ok OR
-           lc_step_02_ok OR
+      WHEN lc_step_01_ok .
+        me->add(
+          EXPORTING it_message = VALUE bapiret2_t(
+            ( type       = if_xo_const_message=>info
+              id         = lc_message_id
+              number     = 874                           "#EC NUMBER_OK
+              message_v1 = |{ im_equnr ALPHA = OUT }|
+              message_v2 = |{ im_tplnr ALPHA = OUT }| ) )
+         ) .
+        " Equipamento & ja está desmontado no loc.instalação &.
+        IF ( 0 EQ 1 ). MESSAGE i874(/yga/jump) WITH space space. ENDIF .
+
+      WHEN lc_step_01_w .
+        me->add(
+          EXPORTING it_message = VALUE bapiret2_t(
+            ( type       = if_xo_const_message=>warning
+              id         = lc_message_id
+              number     = 875                           "#EC NUMBER_OK
+              message_v1 = |{ im_equnr ALPHA = OUT }|
+              message_v2 = |{ im_tplnr ALPHA = OUT }| ) )
+         ) .
+        " Equipamento & ja está desmontado no loc.instalação &.
+        IF ( 0 EQ 1 ). MESSAGE i875(/yga/jump) WITH space space. ENDIF .
+
+      WHEN lc_step_02_ok OR
            lc_step_03_ok .
-        lt_message = VALUE bapiret2_t(
-          ( type       = if_xo_const_message=>success
-            id         = '/YGA/JUMP'
-            number     = 000
-            message_v1 = 'Fase'
-            message_v2 = im_step
-            message_v3 = |- { sy-uzeit+0(2) }:{ sy-uzeit+2(2) }:{ sy-uzeit+4(2) }| ) ) .
-        /yga/cl_oisu_log=>create_direct( lt_message ) .
+        me->add(
+          EXPORTING it_message = VALUE bapiret2_t(
+            ( type       = if_xo_const_message=>info
+              id         = lc_message_id
+              number     = 872                           "#EC NUMBER_OK
+              message_v1 = |{ im_equnr ALPHA = OUT }|
+              message_v2 = |{ im_tplnr ALPHA = OUT }| ) )
+         ) .
+        " Equipamento & já está montado no loc.instalação &.
+        IF ( 0 EQ 1 ). MESSAGE i872(/yga/jump) WITH space space. ENDIF .
 
-      WHEN lc_step_01_w OR
-           lc_step_02_w OR
+      WHEN lc_step_02_w OR
            lc_step_03_w .
-        lt_message = VALUE bapiret2_t(
-          ( type       = if_xo_const_message=>warning
-            id         = '/YGA/JUMP'
-            number     = 000
-            message_v1 = 'Fase'
-            message_v2 = im_step
-            message_v3 = |- { sy-uzeit+0(2) }:{ sy-uzeit+2(2) }:{ sy-uzeit+4(2) }| ) ) .
-        /yga/cl_oisu_log=>create_direct( lt_message ) .
+        me->add(
+          EXPORTING it_message = VALUE bapiret2_t(
+            ( type       = if_xo_const_message=>warning
+              id         = lc_message_id
+              number     = 873                           "#EC NUMBER_OK
+              message_v1 = |{ im_equnr ALPHA = OUT }|
+              message_v2 = |{ im_tplnr ALPHA = OUT }| ) )
+         ) .
+        " Equipamento & não está montado no loc.instalação &.
+        IF ( 0 EQ 1 ). MESSAGE i873(/yga/jump) WITH space space. ENDIF .
 
       WHEN OTHERS .
 
@@ -408,27 +447,27 @@ CLASS /yga/cl_oisu_log IMPLEMENTATION.
   ENDMETHOD .
 
 
+  METHOD get_date_out .
 
-  METHOD create_direct .
-
-    CONSTANTS:
-      lc_object    TYPE balobj_d  VALUE '/YGA/JUMP',
-      lc_subobject TYPE balsubobj VALUE '/YGA/OISU_BACKLOG'.
-
-    DATA(lo_log) = NEW /yga/cl_oisu_log( iv_object    = lc_object
-                                         iv_subobject = lc_subobject ) .
-    IF ( lo_log IS NOT BOUND ) .
+    IF ( im_date IS INITIAL ) .
       RETURN .
     ENDIF .
 
-    IF ( lines( im_message ) EQ 0 ) .
+    result = |{ im_date DATE = USER }| .
+
+  ENDMETHOD.
+
+
+  METHOD get_time_out .
+
+    IF ( im_time IS INITIAL ) .
       RETURN .
     ENDIF .
 
-    lo_log->create( iv_extnumber = |OISU Backlog| ) .
-    lo_log->add( it_message = im_message ) .
-    lo_log->save( ) .
+    result =
+      |{ im_time+0(2) }:{ im_time+2(2) }:{ im_time+4(2) }| .
 
-  ENDMETHOD .
+  ENDMETHOD.
+
 
 ENDCLASS.
