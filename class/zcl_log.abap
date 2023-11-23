@@ -48,7 +48,7 @@ CLASS /yga/cl_oisu_log DEFINITION
       gv_subobject  TYPE balsubobj,
       gv_log_handle TYPE balloghndl.
 
-    "! <p class="shorttext synchronized" lang="pt">Retorna hora no formato HH:mm:ss</p>
+    "! <p class="shorttext synchronized" lang="pt">Retorna data no formato dd.mm.yyyy</p>
     CLASS-METHODS get_date_out
       IMPORTING
         !im_date      TYPE sy-datum
