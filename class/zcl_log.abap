@@ -9,21 +9,25 @@ CLASS /yga/cl_oisu_log DEFINITION
       IMPORTING
         !iv_object    TYPE balobj_d
         !iv_subobject TYPE balsubobj .
+    "! <p class="shorttext synchronized" lang="pt">Cria novo objeto de log</p>
     METHODS create
       IMPORTING
         !iv_extnumber TYPE balnrext .
+    "! <p class="shorttext synchronized" lang="pt">Adiciona mensagens de processsamento (store)</p>
     METHODS add
       IMPORTING
         !it_message TYPE bapiret2_t OPTIONAL
         !is_message TYPE bapiret2 OPTIONAL .
+    "! <p class="shorttext synchronized" lang="pt">Salva mensagens de armazenadas em buffer</p>
     METHODS save .
+    "! <p class="shorttext synchronized" lang="pt">Exibe mensagens</p>
     METHODS show
       IMPORTING
         !is_filter TYPE bal_s_lfil OPTIONAL .
+    "! <p class="shorttext synchronized" lang="pt">Retorna mensagens centralizadas</p>
     METHODS get
       IMPORTING
         !iv_extnumber TYPE balnrext .
-
     "! <p class="shorttext synchronized" lang="pt">Adicionar diretamente log</p>
     CLASS-METHODS add_direct
       IMPORTING
@@ -35,10 +39,10 @@ CLASS /yga/cl_oisu_log DEFINITION
   PRIVATE SECTION.
 
     DATA:
-      gt_log_handle    TYPE bal_t_logh,
-      me->gv_object    TYPE balobj_d,
-      me->gv_subobject TYPE balsubobj,
-      me->gv_log_handle    TYPE balloghndl.
+      gt_log_handle TYPE bal_t_logh,
+      gv_object     TYPE balobj_d,
+      gv_subobject  TYPE balsubobj,
+      gv_log_handle TYPE balloghndl.
 
     "! <p class="shorttext synchronized" lang="pt">Criar diretamente mensagem de log</p>
     CLASS-METHODS create_direct
@@ -306,7 +310,7 @@ CLASS /yga/cl_oisu_log IMPLEMENTATION.
         object_not_found      = 1
         subobject_not_found   = 2
         internal_error        = 3
-        OTHERS                = 4 .
+        OTHERS                = 4.
 
     IF ( sy-subrc NE 0
     AND sy-msgty IS NOT INITIAL.
@@ -332,10 +336,10 @@ CLASS /yga/cl_oisu_log IMPLEMENTATION.
           no_authority         = 4
           OTHERS               = 5.
 
-      IF ( sy-subrc NE 0
-      AND sy-msgty IS NOT INITIAL.
+      IF ( sy-subrc NE 0 ) AND
+         ( sy-msgty IS NOT INITIAL ) .
         MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-           WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+              WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
       ENDIF.
 
     ENDIF.
