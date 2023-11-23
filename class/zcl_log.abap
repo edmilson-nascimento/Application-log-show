@@ -81,8 +81,8 @@ CLASS /yga/cl_oisu_log IMPLEMENTATION.
             log_is_full      = 3
             OTHERS           = 4.
 
-        IF ( sy-subrc NE 0
-        AND sy-msgty IS NOT INITIAL.
+        IF ( sy-subrc NE 0 ) AND
+           ( sy-msgty IS NOT INITIAL ) .
           MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
              WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
         ENDIF.
@@ -109,8 +109,8 @@ CLASS /yga/cl_oisu_log IMPLEMENTATION.
           log_is_full      = 3
           OTHERS           = 4.
 
-      IF ( sy-subrc NE 0
-      AND sy-msgty IS NOT INITIAL.
+      IF ( sy-subrc NE 0 ) AND
+         ( sy-msgty IS NOT INITIAL ) .
         MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
       ENDIF.
@@ -179,11 +179,10 @@ CLASS /yga/cl_oisu_log IMPLEMENTATION.
         error_message           = 2
         OTHERS                  = 3.
 
-    IF ( sy-subrc NE 0.
-      IF ( sy-msgty IS NOT INITIAL.
-        MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-           WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-      ENDIF.
+    IF ( sy-subrc NE 0 ) AND
+       ( sy-msgty IS NOT INITIAL ) .
+      MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+         WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
     ELSE.
       APPEND me->gv_log_handle TO gt_log_handle.
     ENDIF.
@@ -193,12 +192,14 @@ CLASS /yga/cl_oisu_log IMPLEMENTATION.
 
   METHOD get.
 
-    DATA: lt_log_header   TYPE balhdr_t,
-          lt_log_handle   TYPE bal_t_logh,
-          lt_log_messages TYPE bal_t_msgr,
-          lr_object       TYPE bal_r_obj,
-          lr_extnumber    TYPE bal_r_extn,
-          lr_subobject    TYPE bal_r_sub.
+    DATA:
+      lt_log_header   TYPE balhdr_t,
+      lt_log_handle   TYPE bal_t_logh,
+      lt_log_messages TYPE bal_t_msgr,
+      lr_object       TYPE bal_r_obj,
+      lr_extnumber    TYPE bal_r_extn,
+      lr_subobject    TYPE bal_r_sub.
+
     " definir EXTNUMBER para o filtro de pesquisa
     APPEND INITIAL LINE TO lr_extnumber ASSIGNING FIELD-SYMBOL(<fs_extnumber>).
     <fs_extnumber>-sign   = 'I'.
@@ -231,7 +232,8 @@ CLASS /yga/cl_oisu_log IMPLEMENTATION.
         log_not_found  = 1
         OTHERS         = 2.
 
-    IF ( sy-subrc NE 0.
+    IF ( sy-subrc NE 0 ) .
+
       " procurar log especifico para a interface na base de dados
       REFRESH lt_log_header.
       CALL FUNCTION 'BAL_DB_SEARCH'
@@ -245,11 +247,12 @@ CLASS /yga/cl_oisu_log IMPLEMENTATION.
           no_filter_criteria = 2
           OTHERS             = 3.
 
-      IF ( sy-subrc NE 0
-      AND sy-msgty IS NOT INITIAL.
+      IF ( sy-subrc NE 0 ) AND
+         ( sy-msgty IS NOT INITIAL ) .
         MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
       ENDIF.
+
 
       " determinar log handle para a interface em causa
       REFRESH lt_log_handle.
@@ -264,11 +267,12 @@ CLASS /yga/cl_oisu_log IMPLEMENTATION.
           log_already_loaded = 3
           OTHERS             = 4.
 
-      IF ( sy-subrc NE 0
-      AND sy-msgty IS NOT INITIAL.
+      IF ( sy-subrc NE 0 ) AND
+         ( sy-msgty IS NOT INITIAL ) .
         MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
       ENDIF.
+
     ENDIF.
 
     " determinar mensagens do log em causa
@@ -285,7 +289,7 @@ CLASS /yga/cl_oisu_log IMPLEMENTATION.
           log_not_found = 1
           OTHERS        = 2.
 
-      IF ( sy-subrc EQ 0.
+      IF ( sy-subrc EQ 0 ) .
         me->gv_log_handle = lv_log_handle.
       ENDIF.
 
@@ -312,18 +316,19 @@ CLASS /yga/cl_oisu_log IMPLEMENTATION.
         internal_error        = 3
         OTHERS                = 4.
 
-    IF ( sy-subrc NE 0
-    AND sy-msgty IS NOT INITIAL.
-      MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-         WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-    ENDIF.
+        IF ( sy-subrc NE 0 ) and
+           ( sy-msgty IS NOT INITIAL ) .
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+             WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+        ENDIF.
+
 
   ENDMETHOD.
 
 
   METHOD show.
 
-    IF gt_log_handle[] IS NOT INITIAL.
+    IF ( gt_log_handle[] IS NOT INITIAL ) .
 
       CALL FUNCTION 'BAL_DSP_LOG_DISPLAY'
         EXPORTING
